@@ -7,66 +7,71 @@
 
 using namespace std;
 
-struct Process
+struct DataProcessing
 {
 	int num,pid,arrivalTime;
-	int burstTime,priority, finishTime, remainingTime;
+	int burstTime,py, finishTime, remainingTime;
 	int waitingTime, startTime, responseTime;
+	int turnaroundTime;
 
 }cur;
 
-struct comparingOperator // structure has been made to sort on the basis of priority
+typedef struct DataProcessing p ;
+
+struct comparingOperator // structure has been made to sort on the basis of py
 {
 	bool operator()(const p& a ,const p& b)
 	{
-		if(a.priority > b.priority )
-			return true;
-		else if( a.priority < b.priority )
+		if( a.py < b.py )
 			return false;
-		if( a.pid > b.pid ) // if priority is same, then comparing on the basis of pid
+		
+		else if(a.py > b.py )
+			return true;
+			
+		if( a.pid > b.pid ) // if py is same, then comparing on the basis of pid
 			return true;
 
 		return false;
 	}
 };
 
-typedef struct Process p ;
-
 bool processIdSort(const p& a , const p& b)
 {
 	return a.pid < b.pid;
 }
 
-/** Sorting on the base of arrival time if that match then on Priority of Priority also  match than on the base of Process Id**/
+// method to sort the arrival time, if the arrival time will be same, then sorting will be done on the basis of pid
 
 bool arrivalTimeSort( const p& a ,const p& b)
 {
-	if(a.arrivalTime < b.arrivalTime)
-		return true;
-	else if(a.arrivalTime > b.arrivalTime)
+	if(a.arrivalTime > b.arrivalTime)
 		return false;
-	if(a.priority < b.priority)
+	
+	else if(a.arrivalTime < b.arrivalTime)
 		return true;
-	else if(a.priority > b.priority)
+	
+	if(a.py > b.py)
 		return false;
+
+	else if(a.py < b.py)
+		return true;
+
 	if(a.pid < b.pid)
 		return true;
 
 	return false;
 }
 
-bool Numsort( const p& a ,const p& b)
+bool SortingNum( const p& a ,const p& b)
 {
 	return a.num < b.num;
 }
 
-
-/**To check the Input **/
-void my_check(vector<p> mv)
+void checker(vector<p> cc)
 {
-	for(unsigned int i= 0; i < mv.size() ;i++)
+	for(int i= 0; i < cc.size() ;i++)
 	{
-		cout<<" Process Id :"<<mv[i].pid<<" Arrival Time : "<<mv[i].arrivalTime<<" Burst Time : "<<mv[i].burstTime<<" Priority : "<<mv[i].priority<<endl;
+		cout<<" DataProcessing Id :"<<cc[i].pid<<" Arrival Time : "<<cc[i].arrivalTime<<" Burst Time : "<<cc[i].burstTime<<" Priority : "<<cc[i].py<<"\n";
 	}
 }
 
@@ -75,8 +80,20 @@ int main()
 	p t;
 	int process1 = 0, process2 = 0; 
 	int arrivalTime, burstTime, pid;
-	int priority,n,clk;
+	int py,n,clk;
 	int tet = 0;
+	
+	cout<<"\n\n\t\tScheduling Algorithm to Implement Queue with Two Levels\n\n";
+	cout<<"\t\tLevel 1 : Fixed priority preemptive Scheduling\n\n\t\tLevel 2 : Round Robin Scheduling\n\n";
+	
+	cout<<"\t\tLOADING ";
+	for(int i=0;i<5;i++)
+	{
+		cout<<".";
+		sleep(1.5);
+	}
+	
+	system("cls");
 	
 	cout<<"Enter the no of processes : ";
 	cin>>n;
@@ -86,25 +103,27 @@ int main()
 	
 	for(int i= 0; i< n; i++ )
 	{
-		cout<<"Enter the pid : ";
+		cout<<"\n\nEnter the pid : ";
 		cin>>pid;
 		
-		cout<<"Enter the arrival time of pid "<<pid<<" : ";
+		cout<<"\nEnter the arrival time of pid "<<pid<<" : ";
 		cin>>arrivalTime;
 		
-		cout<<"Enter the burst time of pid "<<pid<<" : ";
+		cout<<"\nEnter the burst time of pid "<<pid<<" : ";
 		cin>>burstTime;
 		
-		cout<<"Enter the priority of pid "<<pid<<" : ";
-		cin>>priority;
+		cout<<"\nEnter the priority of pid "<<pid<<" : ";
+		cin>>py;
 		
 		t.num = i+1;
 		t.arrivalTime = arrivalTime;
 		t.burstTime = burstTime;
 		t.remainingTime = burstTime;
 		t.pid = pid;
-		t.priority = priority;
+		t.py = py;
 		process_1_vector.push_back(t);
+		
+		cout<<"\n\t----------------------------------------------";
 	}
 	
 	process_2_vector = process_1_vector;
@@ -133,14 +152,14 @@ int main()
 		ghantChart[i]=-1;
 	}
 
-	priority_queue <p ,vector<Process> ,comparingOperator> prioqueue; // queue has been made for the priority premption
+	priority_queue <p ,vector<DataProcessing> ,comparingOperator> prioqueue; // queue has been made for the py premption
 
 	queue<p> round_robin_queue; // for level 2 queue of round robin
 	
 	int cpuState = 0; // initially CPU is idle, so value is 0
-	int quantum = 2 ; //Time quantum should be multiple of 2
+	int time_Quantum = 2 ; //Time time_Quantum should be multiple of 2
 	cur.pid = -2;
-	cur.priority = 999999;
+	cur.py = 100;
 
 	for ( clk = 0; clk<tet; clk++ )
 	{
@@ -161,7 +180,7 @@ int main()
 				cpuState = 1;
 				process1 = 1;
 				prioqueue.pop();
-				quantum = 2; 
+				time_Quantum = 2; 
 			}
 			else if(!round_robin_queue.empty())
 			{
@@ -169,19 +188,19 @@ int main()
 				cpuState = 1;
 				process2 = 1;
 				round_robin_queue.pop();
-				quantum = 2;
+				time_Quantum = 2;
 			}
 		}
 		else if(cpuState == 1)
 		{
 			if(process1 == 1 && (!prioqueue.empty()))
 			{
-				if(prioqueue.top().priority < cur.priority ) 
+				if(prioqueue.top().py < cur.py ) 
 				{
 					round_robin_queue.push(cur); 
 					cur = prioqueue.top();
 					prioqueue.pop();
-					quantum = 2; 
+					time_Quantum = 2; 
 				}
 			}
 			else if(process2 == 1 && (!prioqueue.empty()))
@@ -191,31 +210,31 @@ int main()
 				prioqueue.pop();
 				process2 = 0;
 				process1 = 1;
-				quantum = 2 ;
+				time_Quantum = 2 ;
 			}
 		}
 
 		if(cur.pid != -2) 
 		{
 			cur.remainingTime--;
-			quantum--;
+			time_Quantum--;
 			
 			ghantChart[clk] = cur.pid;
 			
 			if(cur.remainingTime == 0) 
 			{
 				cpuState = 0 ;
-				quantum = 2 ;
+				time_Quantum = 2 ;
 				cur.pid = -2;
-				cur.priority = 999999;
+				cur.py = 999999;
 				process2 = 0;
 				process1 = 0;
 			}
-			else if(quantum == 0 ) 
+			else if(time_Quantum == 0 ) 
 			{
 				round_robin_queue.push(cur);
 				cur.pid = -2;
-				cur.priority = 999999;
+				cur.py = 999999;
 				process2 = 0;
 				process1 = 0;
 				cpuState = 0;
@@ -250,12 +269,13 @@ int main()
 		}
 	}
 	
-	sort( process_1_vector.begin(), process_1_vector.end(), Numsort );
+	sort( process_1_vector.begin(), process_1_vector.end(), SortingNum );
 
 	for(int i=0;i<n;i++)
 	{
 		process_1_vector[i].responseTime=process_1_vector[i].startTime - process_1_vector[i].arrivalTime;
 		process_1_vector[i].waitingTime=(process_1_vector[i].finishTime-process_1_vector[i].arrivalTime)-process_1_vector[i].burstTime;
+		process_1_vector[i].turnaroundTime = process_1_vector[i].finishTime - process_1_vector[i].arrivalTime;
 	}
 	
 	system("cls");
@@ -268,11 +288,29 @@ int main()
 	    sleep(2);
 	}
 	
-	cout<<"\n\nPid |\tResponse Time |\tFinish Time |\tWaiting Time\n";
+	cout<<"\n\nPid |\tResponse Time |\tFinish Time |\t Turnaround Time | Waiting Time\n";
+	
+	int ans1 = 0;
+	int ans2 = 0;
 	
 	for(int i=0;i<n;i++)
 	{
-		cout<<" "<<process_1_vector[i].pid<<"\t\t"<<process_1_vector[i].responseTime<<"\t\t"<<process_1_vector[i].finishTime<<"\t\t"<<process_1_vector[i].waitingTime<<endl;
-	}	
+		cout<<" "<<process_1_vector[i].pid<<"\t\t"<<process_1_vector[i].responseTime<<"\t\t"<<process_1_vector[i].finishTime
+		cout<<"\t\t"<<process_1_vector[i].turnaroundTime<<"\t\t"<<process_1_vector[i].waitingTime<<endl;
+		
+		ans1 = ans1 + process_1_vector[i].waitingTime;
+		ans2 = ans2 + process_1_vector[i].turnaroundTime;
+	}
+	
+	cout<<"\n\n System doing calculations, please wait ";
+	for(int i=0;i<5;i++)
+	{
+		cout<<".";
+		sleep(1);
+	}
+	
+	cout<<"\n\nAverage Turnaround Time : "<<(float)ans2/n<<"s";
+	cout<<"\nAverage Waiting Time : "<<(float)ans1/n<<"s";
+		
 	return 0;
 }
